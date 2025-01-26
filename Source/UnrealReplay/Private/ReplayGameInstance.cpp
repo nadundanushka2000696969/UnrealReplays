@@ -5,6 +5,18 @@
 #include "Engine/DemoNetDriver.h"
 #include "Engine/World.h"
 
+void UReplayGameInstance::Init()
+{
+    Super::Init();
+
+    // create a ReplayStreamer for FindReplays() and DeleteReplay(..)
+    EnumerateStreamsPtr = FNetworkReplayStreaming::Get().GetFactory().CreateReplayStreamer();
+    // Link FindReplays() delegate to function
+    OnEnumerateStreamsCompleteDelegate = FEnumerateStreamsCallback::CreateUObject(this, &UReplayGameInstance::OnEnumerateStreamsComplete);
+    // Link DeleteReplay() delegate to function
+    //OnDeleteFinishedStreamCompleteDelegate = FOnDeleteFinishedStreamComplete::CreateUObject(this, &UMyGameInstance::OnDeleteFinishedStreamComplete);
+}
+
 void UReplayGameInstance::StartRecordingReplay(const FString& ReplayName)
 {
     FString FriendlyName = FString::Printf(TEXT("Replay-%d-%d-%d"), FDateTime::Now().GetYear(), FDateTime::Now().GetMonth(), FDateTime::Now().GetDay());
@@ -19,7 +31,6 @@ void UReplayGameInstance::StopRecordingReplay()
 void UReplayGameInstance::PlayReplay(const FString& ReplayName)
 {
     Super::PlayReplay(ReplayName);
-    
 }
 
 void UReplayGameInstance::PauseReplay()
@@ -50,7 +61,7 @@ TArray<FString> UReplayGameInstance::GetSavedReplays()
     IFileManager& FileManager = IFileManager::Get();
     FString ReplayFolder = FPaths::ProjectSavedDir() / TEXT("Demos");
 
-    FileManager.FindFiles(ReplayList, *ReplayFolder, TEXT(".demo"));
+    FileManager.FindFiles(ReplayList, *ReplayFolder, TEXT(".replay"));
 
     return ReplayList;
 }
@@ -84,4 +95,26 @@ float UReplayGameInstance::GetTotalReplayTime() const
 bool UReplayGameInstance::IsReplayActive() const
 {
     return GetWorld() && GetWorld()->GetDemoNetDriver() && GetWorld()->GetDemoNetDriver()->IsPlaying();
+}
+
+void UReplayGameInstance::FindReplays()
+{
+    if (EnumerateStreamsPtr.Get())
+    {
+        EnumerateStreamsPtr.Get()->EnumerateStreams(FNetworkReplayVersion(), int32(), FString(), FJsonSerializableArray(), OnEnumerateStreamsCompleteDelegate);
+    }
+}
+
+void UReplayGameInstance::OnEnumerateStreamsComplete(const FEnumerateStreamsResult& AllReplays)
+{
+    m_AllReplays.Empty();
+    for (FNetworkReplayStreamInfo StreamInfo : AllReplays.FoundStreams)
+    {
+        if (!StreamInfo.bIsLive)
+        {
+            m_AllReplays.Add(FS_ReplayInfo(StreamInfo.Name, StreamInfo.FriendlyName, StreamInfo.Timestamp, StreamInfo.LengthInMS));
+        }
+    }
+
+    OnReplyFound.Broadcast(m_AllReplays);
 }

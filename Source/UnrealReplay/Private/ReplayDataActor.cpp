@@ -101,10 +101,12 @@ void AReplayDataActor::RecordFrameData(float DeltaTime)
     APlayerController* PlayerController = GetWorld()->GetFirstPlayerController();
     if (!PlayerController) return;
     
-    FVector PlayerLocation;
-    FVector PlayerVelocity;
-    FRotator CameraRotation;
-    FVector EnemyLocation;
+    FVector PlayerLocation = FVector::ZeroVector;
+    FVector PlayerVelocity = FVector::ZeroVector;
+    FRotator CameraRotation = FRotator::ZeroRotator;
+    FVector EnemyLocation = FVector::ZeroVector;
+    float PlayerEnemyDistance = 0.f;
+
     if(Player)
     {
         PlayerLocation = Player->GetActorLocation();
@@ -115,6 +117,7 @@ void AReplayDataActor::RecordFrameData(float DeltaTime)
     if(Enemy)
     {
         EnemyLocation = Enemy->GetActorLocation();
+        PlayerEnemyDistance = FVector::Dist(PlayerLocation, EnemyLocation);
     }
 
     float CameraRotationSpeed = 0.0f;
@@ -129,7 +132,6 @@ void AReplayDataActor::RecordFrameData(float DeltaTime)
     }
     PreviousCameraRotation = CameraRotation;
 
-    float PlayerEnemyDistance = FVector::Dist(PlayerLocation, EnemyLocation);
     float PlayerSpeed = PlayerVelocity.Size();
 
     FReplayFrameData FrameData;
@@ -150,7 +152,7 @@ void AReplayDataActor::HandleReplayStart()
 void AReplayDataActor::HandleReplayEnd()
 {
     bIsRecording = false;
-    FString FilePath = FPaths::ProjectSavedDir() / DemoDriver->GetActiveReplayName() + ".json";
+    FString FilePath = FPaths::ProjectSavedDir() / "DemoExtractedData" / DemoDriver->GetActiveReplayName() + ".json";
     SaveRecordedDataToFile(FilePath);
     UE_LOG(LogTemp, Log, TEXT("Replay ended. Data saved to file."));
 }

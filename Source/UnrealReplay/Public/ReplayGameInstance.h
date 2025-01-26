@@ -4,15 +4,63 @@
 
 #include "CoreMinimal.h"
 #include "Engine/GameInstance.h"
+#include "NetworkReplayStreaming.h"
 #include "ReplayGameInstance.generated.h"
 
 /**
  * 
  */
+USTRUCT(BlueprintType)
+struct FS_ReplayInfo
+{
+    GENERATED_USTRUCT_BODY()
+
+    UPROPERTY(BlueprintReadOnly)
+    FString ReplayName;
+
+    UPROPERTY(BlueprintReadOnly)
+    FString FriendlyName;
+
+    UPROPERTY(BlueprintReadOnly)
+    FDateTime Timestamp;
+
+    UPROPERTY(BlueprintReadOnly)
+    int32 LengthInMS;
+
+    UPROPERTY(BlueprintReadOnly)
+    bool bIsValid;
+
+    FS_ReplayInfo(FString NewName, FString NewFriendlyName, FDateTime NewTimestamp, int32 NewLengthInMS)
+    {
+        ReplayName = NewName;
+        FriendlyName = NewFriendlyName;
+        Timestamp = NewTimestamp;
+        LengthInMS = NewLengthInMS;
+        bIsValid = true;
+    }
+
+    FS_ReplayInfo()
+    {
+        ReplayName = "Replay";
+        FriendlyName = "Replay";
+        Timestamp = FDateTime::MinValue();
+        LengthInMS = 0;
+        bIsValid = false;
+    }
+};
+
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnReplyFound, const TArray<FS_ReplayInfo>&, ReplayInfos);
 UCLASS()
 class UNREALREPLAY_API UReplayGameInstance : public UGameInstance
 {
 	GENERATED_BODY()
+
+public:
+    UPROPERTY(BlueprintAssignable)
+    FOnReplyFound OnReplyFound;
+    
+    virtual void Init() override;
+
     // Start recording a replay
     UFUNCTION(BlueprintCallable, Category = "Replay")
     void StartRecordingReplay(const FString& ReplayName);
@@ -53,7 +101,21 @@ class UNREALREPLAY_API UReplayGameInstance : public UGameInstance
     UFUNCTION(BlueprintCallable, Category = "Replay")
     float GetTotalReplayTime() const;
 
-private:
-
+    UFUNCTION(BlueprintCallable, Category = "Replay")
     bool IsReplayActive() const;
+
+    UFUNCTION(BlueprintCallable, Category = "Replay")
+    void FindReplays();
+
+private:
+    TSharedPtr<INetworkReplayStreamer> EnumerateStreamsPtr;
+
+    FEnumerateStreamsCallback OnEnumerateStreamsCompleteDelegate;
+
+    void OnEnumerateStreamsComplete(const FEnumerateStreamsResult& StreamInfos);
+
+    TArray<FS_ReplayInfo> m_AllReplays;
+
+protected:
+
 };
