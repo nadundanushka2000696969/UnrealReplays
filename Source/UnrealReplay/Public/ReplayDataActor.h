@@ -20,6 +20,9 @@ struct FReplayFrameData
 
     UPROPERTY(BlueprintReadOnly)
     float PlayerSpeed;
+
+    UPROPERTY(BlueprintReadOnly)
+    bool Fear;
 };
 
 UCLASS()
@@ -43,6 +46,14 @@ public:
         Enemy = InEnemy;
     }
 
+    UFUNCTION(BlueprintCallable, Category = "ReplayActor")
+    void SetFear(bool fear)
+    {
+        Fear = fear;
+    }
+
+    UPROPERTY(BlueprintReadOnly)
+    bool Fear = false;
 protected:
     // Called when the game starts or when spawned
     virtual void BeginPlay() override;
@@ -52,6 +63,7 @@ private:
     UDemoNetDriver* DemoDriver = nullptr;
     ACharacter* Player = nullptr;
     ACharacter* Enemy = nullptr;
+
 
     bool bIsRecording = false;
     bool bWasReplayPlaying = false;

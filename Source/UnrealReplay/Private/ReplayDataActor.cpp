@@ -139,6 +139,7 @@ void AReplayDataActor::RecordFrameData(float DeltaTime)
     FrameData.PlayerCameraRotation = CameraRotation;
     FrameData.PlayerSpeed = PlayerSpeed;
     FrameData.CameraRotationSpeed = CameraRotationSpeed;
+    FrameData.Fear = Fear;
     RecordedData.Add(FrameData);
 }
 
@@ -169,6 +170,7 @@ void AReplayDataActor::SaveRecordedDataToFile(const FString& FilePath)
         FrameObject->SetStringField(TEXT("PlayerCameraRotation"), Frame.PlayerCameraRotation.ToString());
         FrameObject->SetNumberField(TEXT("PlayerSpeed"), Frame.PlayerSpeed);
         FrameObject->SetNumberField(TEXT("CameraRotationSpeed"), Frame.CameraRotationSpeed);
+        FrameObject->SetBoolField(TEXT("Fear"), Frame.Fear);
         ReplayDataArray.Add(MakeShareable(new FJsonValueObject(FrameObject)));
     }
 

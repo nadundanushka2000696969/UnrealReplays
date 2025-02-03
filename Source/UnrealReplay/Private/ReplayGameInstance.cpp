@@ -49,6 +49,11 @@ void UReplayGameInstance::ResumeReplay()
     }
 }
 
+void UReplayGameInstance::UnPauseTheGameReplay()
+{
+        GetWorld()->GetWorldSettings()->SetPauserPlayerState(nullptr);
+}
+
 bool UReplayGameInstance::RenameReplay(const FString& OldReplayName, const FString& NewReplayName)
 {
     // Replace with actual rename logic; depends on your file storage setup

@@ -81,6 +81,9 @@ public:
     UFUNCTION(BlueprintCallable, Category = "Replay")
     void ResumeReplay();
 
+    UFUNCTION(BlueprintCallable, Category = "Replay")
+    void UnPauseTheGameReplay();
+
     // Rename a replay file
     UFUNCTION(BlueprintCallable, Category = "Replay")
     bool RenameReplay(const FString& OldReplayName, const FString& NewReplayName);
